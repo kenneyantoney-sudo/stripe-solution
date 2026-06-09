@@ -1,0 +1,54 @@
+<main>
+  {{#if paymentIntentId}}
+    {{#if isSuccess}}
+      <div class="mt-40 text-center text-success">
+        <h1><i class="far fa-check-circle"></i> Order received!</h1>
+      </div>
+      <div class="mt-40 text-center">
+        <p>Total charged: <strong>$<span class="amount" data-amount="{{amount}}"></span></strong></p>
+        <p class="text-muted mt-20">Payment Intent ID:</p>
+        <p><code>{{paymentIntentId}}</code></p>
+        <p class="text-muted mt-20">Status: <code>{{status}}</code></p>
+      </div>
+
+      {{!-- The teaching moment: this page did NOT fulfill the order. --}}
+      <div class="card box-shadow mt-40 key-note">
+        <div class="card-body">
+          <h5><i class="fas fa-bolt text-warning"></i> Fulfillment came from the event, not this page</h5>
+          <p>
+            You're here because Stripe redirected your browser after payment.
+            But the kitchen was told to cook — and the restaurant and driver get
+            paid — by a server-side <code>payment_intent.succeeded</code> event,
+            <strong>not</strong> by this redirect.
+          </p>
+          <p class="mb-0">
+            A browser can close, lose signal, or be faked. The event from Stripe
+            is the trustworthy "money moved" signal. That's why
+            <strong>Stripe is the system of record and fulfillment runs off
+            events.</strong> Check your server terminal for
+            <code>FULFILL ORDER …</code>.
+          </p>
+        </div>
+      </div>
+
+      <p class="text-center mt-40"><a href="/" class="btn btn-outline-primary">Back to menu</a></p>
+    {{else}}
+      <div class="mt-40 text-center text-warning">
+        <h1><i class="far fa-clock"></i> Payment not completed</h1>
+      </div>
+      <div class="mt-40 text-center">
+        <p>This payment is not in a completed state.</p>
+        <p class="text-muted mt-20">Current status: <code>{{status}}</code></p>
+        <p class="text-muted mt-20">Payment Intent ID:</p>
+        <p><code>{{paymentIntentId}}</code></p>
+        <p class="mt-40"><a href="/" class="btn btn-primary">Back to menu</a></p>
+      </div>
+    {{/if}}
+  {{else}}
+    <div class="mt-40 text-center">
+      <h1 class="text-secondary">No payment to display</h1>
+      <p class="text-muted mt-20">It looks like you reached this page without completing an order.</p>
+      <p class="mt-40"><a href="/" class="btn btn-primary">Back to menu</a></p>
+    </div>
+  {{/if}}
+</main>

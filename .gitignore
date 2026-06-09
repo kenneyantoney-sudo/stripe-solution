@@ -1,0 +1,28 @@
+# --- Secrets: NEVER commit these ---
+.env
+.env.*
+!.env.example
+sample.env
+
+# --- Node ---
+node_modules/
+npm-debug.log*
+yarn-error.log*
+
+# --- AWS CDK ---
+aws/cdk.out/
+cdk.out/
+*.js.map
+
+# --- CDK compiled output (we run TS via ts-node; compiled .js is throwaway) ---
+# Only ignore compiled output next to TS sources in bin/ and lib/.
+# Do NOT ignore aws/functions/** — those are hand-written Lambda SOURCE.
+aws/bin/*.js
+aws/lib/*.js
+aws/bin/*.d.ts
+aws/lib/*.d.ts
+
+# --- OS / editor ---
+.DS_Store
+.vscode/
+.idea/

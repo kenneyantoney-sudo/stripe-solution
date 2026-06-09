@@ -1,0 +1,56 @@
+{{!-- Stripe.js must be loaded from js.stripe.com (not npm) so card data stays
+     in Stripe's iframe for PCI compliance. Ref: https://docs.stripe.com/js --}}
+{{#if title}}
+  <script src="https://js.stripe.com/v3/"></script>
+
+  <div class="row justify-content-md-center">
+    <div class="col-md-6">
+      <div class="text-center mt-40">
+        <div class="checkout-emoji">{{emoji}}</div>
+        <h1>Checkout</h1>
+        <h5 class="text-secondary">{{title}}</h5>
+        <p class="text-muted">{{vendor}}</p>
+        <hr class="mt-40" />
+        <div class="mt-20 text-info">
+          Total due: $<span class="amount" data-amount="{{amount}}"></span>
+        </div>
+      </div>
+
+      <div class="card box-shadow mt-40">
+        <div class="card-body">
+          <form name="payment-form">
+            {{!-- Payment Element mounts here. Card details enter Stripe's
+                  iframe directly, so they never touch our DOM. --}}
+            <div id="payment-element" class="mt-20"></div>
+            <div id="payment-message" class="mt-20 text-danger"></div>
+
+            <div class="mt-20">
+              <button type="submit" class="btn btn-lg btn-block btn-primary">
+                Pay $<span class="amount" data-amount="{{amount}}"></span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <p class="text-center text-muted mt-20">
+        <small>Test card: 4242 4242 4242 4242 · any future date · any CVC · any ZIP</small>
+      </p>
+    </div>
+  </div>
+
+  {{!-- Server-rendered config for the client. The item id is read from the URL. --}}
+  <script>
+    window.STRIPE_CONFIG = {
+      publishableKey: "{{publishableKey}}",
+      checkoutSessionId: "{{checkoutSessionId}}"
+    };
+  </script>
+  <script src="/js/checkout.js"></script>
+{{else}}
+  <div class="mt-40 text-center">
+    <h1 class="text-secondary">No item selected</h1>
+    <p class="text-muted mt-20">Choose a dish from the menu to begin checkout.</p>
+    <p class="mt-40"><a href="/" class="btn btn-primary">Back to menu</a></p>
+  </div>
+{{/if}}

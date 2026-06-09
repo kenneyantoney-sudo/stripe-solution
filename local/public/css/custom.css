@@ -1,0 +1,50 @@
+body {
+  font-family: "Roboto", sans-serif;
+  background: #f2f6fa;
+  color: #1a1f36;
+}
+h1, h2, h3, h4 {
+  font-weight: 300;
+}
+.brand-mark {
+  font-weight: 500;
+  font-size: 1.3rem;
+  color: #635bff;
+}
+.test-badge {
+  border: 1px solid #d1d5db;
+  color: #6b7280;
+  font-weight: 400;
+}
+.btn-primary {
+  background: #635bff;
+  border-color: #635bff;
+}
+.btn-primary:hover {
+  background: #5147e6;
+  border-color: #5147e6;
+}
+.btn-outline-primary {
+  color: #635bff;
+  border-color: #635bff;
+}
+.box-shadow {
+  box-shadow: 0 15px 35px rgba(50, 50, 93, 0.1), 0 5px 15px rgba(0, 0, 0, 0.07);
+  border: none;
+  border-radius: 10px;
+}
+.card-emoji {
+  font-size: 64px;
+  padding: 28px 0 4px;
+  background: #fff;
+  border-radius: 10px 10px 0 0;
+}
+.checkout-emoji {
+  font-size: 56px;
+}
+.key-note {
+  border-left: 4px solid #635bff;
+}
+.mt-20 { margin-top: 20px; }
+.mt-40 { margin-top: 40px; }
+.mb-20 { margin-bottom: 20px; }

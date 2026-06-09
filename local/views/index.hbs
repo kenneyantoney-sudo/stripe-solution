@@ -1,0 +1,24 @@
+<div class="text-center mt-40">
+  <h1>FoodNow</h1>
+  <p class="text-secondary">Order from your favorite local spots — pick a dish to checkout.</p>
+</div>
+
+<div class="mt-40 row">
+  {{!-- Render the storefront from the server-side menu so the displayed
+        titles and prices always match the charging logic. --}}
+  {{#each menu}}
+    <div class="col-md-4 mb-4">
+      <div class="card box-shadow h-100">
+        <div class="card-emoji text-center">{{emoji}}</div>
+        <div class="card-body d-flex flex-column">
+          <h5 class="card-title">{{title}}</h5>
+          <strong class="text-muted">{{vendor}}</strong>
+          <p class="card-text mt-20 flex-grow-1">{{description}}</p>
+          <a href="/checkout?item={{id}}" class="btn btn-primary btn-block">
+            Order — $<span class="amount" data-amount="{{amount}}"></span>
+          </a>
+        </div>
+      </div>
+    </div>
+  {{/each}}
+</div>

@@ -1,0 +1,24 @@
+{
+  "name": "foodnow-stripe-demo",
+  "version": "1.0.0",
+  "description": "FoodNow — Stripe Payment Element checkout demo with two runnable paths: local Express (Path A) and AWS CDK serverless + native EventBridge (Path B). Test mode only.",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node local/server.js",
+    "dev": "node local/server.js"
+  },
+  "keywords": [
+    "stripe",
+    "payment-element",
+    "eventbridge",
+    "aws",
+    "connect"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "express-handlebars": "^7.1.3",
+    "stripe": "^16.12.0"
+  }
+}
