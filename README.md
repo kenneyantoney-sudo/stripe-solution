@@ -168,7 +168,8 @@ stripe events resend <evt_id>   # id shown in the stripe listen output
 ### 6. (Optional) Connect split
 Set `CONNECTED_ACCOUNT_ID=acct_...` in `.env` and restart. The payment becomes
 a **destination charge**: FoodNow keeps 20%, the rest goes to the connected
-account. Verify the application fee on the PaymentIntent in the Dashboard.
+account. See **"Connect split — one payment, paid out to the restaurant"** below
+for the full diagram and step-by-step test.
 
 ---
 
@@ -309,6 +310,51 @@ write, so even a same-millisecond race can only fulfill once.
 
 ---
 
+## Connect split — one payment, paid out to the restaurant
+
+This is the **marketplace** story: the customer makes **one** payment; Stripe
+keeps a 20% platform fee for FoodNow and **transfers** the rest to the
+restaurant's connected account. This is a **destination charge** — FoodNow (the
+platform) owns the charge, then routes money out.
+
+```mermaid
+sequenceDiagram
+    participant B as Customer
+    participant F as FoodNow (platform)
+    participant Stripe as Stripe
+    participant R as Restaurant (acct_...)
+    B->>F: Pay $22.00 (one payment)
+    F->>Stripe: PaymentIntent + application_fee_amount=440 + transfer_data.destination=acct_...
+    Stripe->>Stripe: charge the card $22.00
+    Stripe->>F: keep $4.40 application fee (platform)
+    Stripe->>R: transfer $17.60 to the restaurant
+    Note over B,R: ONE customer payment → Stripe splits the money
+```
+
+### How to test it (proven working)
+1. **Create a test connected account** (the restaurant). Dashboard (test mode) →
+   **Connect → Accounts → + Create** → **Express**, US → finish the test
+   onboarding. Copy its id: `acct_...`. It needs the **transfers** capability
+   active (Express onboarding grants it).
+2. **Turn the split on locally.** In `.env` set `CONNECTED_ACCOUNT_ID=acct_...`
+   and **restart** the server. The boot log must print:
+   `Connect split ENABLED -> acct_... (20% fee)`.
+3. **Pay a new order** at the storefront with `4242 4242 4242 4242`.
+4. **Verify on that payment** (Dashboard → Payments → newest). You should see:
+
+   | Line | Value | Who gets it |
+   |---|---|---|
+   | Payment amount | `$22.00` | one customer charge |
+   | **Application fee** | **`$4.40`** | FoodNow keeps (20% platform fee) |
+   | **Transfer → Connected account** | **`$17.60` → `acct_...`** | the restaurant |
+
+> **Off by default.** Leave `CONNECTED_ACCOUNT_ID` blank for a plain single
+> charge. Set it to enable the split. On AWS, pass `-c connectedAccountId=acct_...`
+> at `cdk deploy`. The amount + fee math lives in `src/core/paymentIntent.js`
+> (`application_fee_amount = Math.round(amount * 0.2)`).
+
+---
+
 ## Local → AWS mapping
 
 | Concern | Path A (local) | Path B (AWS) |
@@ -323,27 +369,33 @@ write, so even a same-millisecond race can only fulfill once.
 
 ---
 
-## What to say while demoing
+## Demo day — speaker notes (follow top to bottom)
 
-1. **"The amount is set on the server."** Open `src/core/cart.js`. The browser
-   POSTs an empty body; the server computes the total. A user can't pay $0.01
-   for a $40 order.
-2. **"Stripe is the system of record; fulfillment runs off events."** Pay with
-   4242, land on the success page — then point out the success page itself says
-   it did *not* fulfill. The `FULFILL ORDER` log comes from the webhook event.
-3. **"Why events, not the redirect?"** A browser can close or be faked. The
-   `payment_intent.succeeded` event is the trustworthy "money moved" signal.
-4. **"On AWS there's no webhook server."** Stripe delivers natively to
-   EventBridge; a rule routes `payment_intent.succeeded` to a Lambda. Less to
-   host, patch, and scale.
-5. **"It's idempotent."** Replay the event. Local uses a Set; AWS uses a
-   DynamoDB conditional write on `event.id`. No double-cooked orders, no double
-   payouts.
-6. **"And it's a real marketplace."** Flip on `CONNECTED_ACCOUNT_ID`: one
-   payment splits to the restaurant/driver with a 20% platform fee retained.
-7. **"The process is spec-driven."** `/specs` is the source of truth; the
-   `.claude/skills` codify build-from-spec and verify-demo — the AI development
-   lifecycle that produced this.
+Read the **left** column out loud; **do** the right column. Keep two terminals
+open: the FoodNow server, and the AWS log tail.
+
+**Before you start (off camera):**
+- FoodNow server running; storefront open in the browser.
+- AWS logs tailing:
+  `aws logs tail /aws/lambda/<FulfillmentFnName> --follow --region us-east-1 --format short`
+- For the marketplace part, `CONNECTED_ACCOUNT_ID` is set and the boot log says
+  `Connect split ENABLED`.
+
+| # | Say this | Do this |
+|---|---|---|
+| 1 | "FoodNow is a food-delivery marketplace. Customer pays once; we keep a fee; the restaurant gets paid. **Stripe is the system of record.**" | Show the storefront menu. |
+| 2 | "**The server sets the price**, never the browser. The browser only sends an item id — so no one can pay $0.01 for a $22 order." | Click **Order** on a dish. Mention `src/core/cart.js` is the source of truth. |
+| 3 | "Card details go **straight to Stripe** through the Payment Element — they never touch our server. That keeps us in the lightest PCI scope." | Show the card form. Pay with `4242 4242 4242 4242`. |
+| 4 | "I land on a receipt — but notice it says it did **NOT** fulfill the order. The redirect is just a screen for the human." | Point at the success page wording. |
+| 5 | "**The event cooks the food, not the redirect.** Watch — `FULFILL ORDER` just appeared in **AWS CloudWatch**. My browser never called AWS. Stripe delivered `payment_intent.succeeded` natively to **EventBridge**, which fired a Lambda." | Point at the `FULFILL ORDER` line in the AWS terminal. |
+| 6 | "There's **no webhook server** on AWS — nothing to host, patch, or scale. Stripe → EventBridge → Lambda." | (Optional) show the EventBridge rule in the console. |
+| 7 | "It's **idempotent**. Stripe delivers at-least-once, so duplicates happen. The same event twice fulfills **once** — a DynamoDB conditional write claims the event id." | Re-invoke the Lambda with the same event id (see the idempotency snippet above): `{fulfilled:true}` then `{duplicate:true}`. |
+| 8 | "And it's a **real marketplace**. One $22 payment → we keep **$4.40** (20% fee) → **$17.60** transfers to the restaurant's account." | Open the paid PaymentIntent in the Dashboard; point at **Application fee** + **Transfer**. |
+| 9 | "Same money logic runs **locally and on AWS** — `src/core` is shared. And the whole thing is **spec-driven**: `/specs` is the source of truth, and `.claude/skills` codify build-from-spec and verify-demo." | Show `src/core/` and `specs/`. |
+
+**One-line close:** "One payment, server-set price, event-driven fulfillment,
+idempotent, and split to the merchant — built spec-first, runs the same code
+local and on AWS."
 
 ---
 
