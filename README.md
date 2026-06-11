@@ -411,3 +411,7 @@ local and on AWS."
 ## Verify before an interview
 Run the `verify-demo` skill (or follow `specs/04-acceptance-criteria.md`) to get
 a pass/fail checklist across both paths.
+
+## Recording a demo video
+See **[`DEMO_SCRIPT.md`](DEMO_SCRIPT.md)** — a step-by-step recording kit:
+fresh-laptop setup, terminal/browser prep, and a 5-act say/do narration script.
